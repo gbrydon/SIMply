@@ -631,7 +631,7 @@ class Spheroid(Geometry):
     @property
     def isNumpyType(self) -> bool:
         nump = np.ndarray
-        return type(self.rx) == nump or type(self.ry) == nump or type(self.rz) == nump or super().isNumpyType
+        return type(self.rx) is nump or type(self.ry) is nump or type(self.rz) is nump or super().isNumpyType
 
     def normal(self, point: 'Vec3') -> 'Vec3':
         pointlocal = self._frame.fromWorld(point)
