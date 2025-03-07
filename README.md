@@ -1,45 +1,40 @@
-**Edit a file, create a new file, and clone from Bitbucket in under 2 minutes**
+# SIMply: Python Image Simulator for Planetary Exploration
+SIMply is an open-source python tool for simulating physically realistic images.
+SIMply is designed primarily to support the development of spaceborne cameras by providing a simple and accessible simulation tool for generating images of space scenes.
+SIMply can simulate a wide range of spaceborne imaging scenarios (small bodies, moons, planets, artificial objects), and provides a high level of flexibility to customise the camera, scene and rendering engine.
+Simulations can be set up intuitively in just a few lines of Python code.
 
-When you're done, you can delete the content in this README and update the file with details for others getting started with your repository.
+As a physically-based image simulator, SIMply is also suitable for simulating a wide range of imaging scenarios unrelated to space. Thanks to its simple design, SIMply is also a good way to experiment with and learn about physical image simulation.
 
-*We recommend that you open this README in another tab as you perform the tasks below. You can [watch our video](https://youtu.be/0ocf7u76WSo) for a full demo of all the steps in this tutorial. Open the video in a new tab to avoid leaving Bitbucket.*
+## Install
+Currently, there are two options for installation:
+- clone the SIMply repository
+- simply download the SIMply source code (select code > download zip) and place the full SIMply package into your project
 
----
+### Dependencies
+In both cases, it is also necessary to ensure the following dependencies are installed:
+- [open3D](https://www.open3d.org/)
+- [numpy](https://numpy.org/)
+- [scipy](https://scipy.org/)
+- [openCV](https://opencv.org/)
+- [astropy](http://www.astropy.org)
+- [pandas](https://pandas.pydata.org/)
+- [matplotlib](https://matplotlib.org/)
+- [gdal](https://pypi.org/project/GDAL/) (optional, for working with geotifs)
 
-## Edit a file
+## Usage
+See the examples.py file for simple examples of how to set up and run image simulations.
 
-You’ll start by editing this README file to learn how to edit a file in Bitbucket.
+## Acknowledgements
 
-1. Click **Source** on the left side.
-2. Click the README.md link from the list of files.
-3. Click the **Edit** button.
-4. Delete the following text: *Delete this line to make a change to the README from Bitbucket.*
-5. After making your change, click **Commit** and then **Commit** again in the dialog. The commit page will open and you’ll see the change you just made.
-6. Go back to the **Source** page.
+[![numpy](http://img.shields.io/badge/powered%20by-NumPy-blue.svg?style=flat)](https://numpy.org/)
+[![open3d](http://img.shields.io/badge/powered%20by-Open3D-blue.svg?style=flat)](https://www.open3d.org/)
+[![scipy](http://img.shields.io/badge/powered%20by-SciPy-blue.svg?style=flat)](https://scipy.org/)
+[![opencv](http://img.shields.io/badge/powered%20by-OpenCV-blue.svg?style=flat)](https://opencv.org/)
+[![pandas](http://img.shields.io/badge/powered%20by-pandas-blue.svg?style=flat)](https://pandas.pydata.org/)
+[![astropy](http://img.shields.io/badge/powered%20by-AstroPy-blue.svg?style=flat)](http://www.astropy.org/)
+[![matplotlib](http://img.shields.io/badge/powered%20by-Matplotlib-blue.svg?style=flat)](https://matplotlib.org/)
+[![gdal](http://img.shields.io/badge/powered%20by-gdal-blue.svg?style=flat)](https://pypi.org/project/GDAL/)
 
----
-
-## Create a file
-
-Next, you’ll add a new file to this repository.
-
-1. Click the **New file** button at the top of the **Source** page.
-2. Give the file a filename of **contributors.txt**.
-3. Enter your name in the empty file space.
-4. Click **Commit** and then **Commit** again in the dialog.
-5. Go back to the **Source** page.
-
-Before you move on, go ahead and explore the repository. You've already seen the **Source** page, but check out the **Commits**, **Branches**, and **Settings** pages.
-
----
-
-## Clone a repository
-
-Use these steps to clone from SourceTree, our client for using the repository command-line free. Cloning allows you to work on your files locally. If you don't yet have SourceTree, [download and install first](https://www.sourcetreeapp.com/). If you prefer to clone from the command line, see [Clone a repository](https://confluence.atlassian.com/x/4whODQ).
-
-1. You’ll see the clone button under the **Source** heading. Click that button.
-2. Now click **Check out in SourceTree**. You may need to create a SourceTree account or log in.
-3. When you see the **Clone New** dialog in SourceTree, update the destination path and name if you’d like to and then click **Clone**.
-4. Open the directory you just created to see your repository’s files.
-
-Now that you're more familiar with your Bitbucket repository, go ahead and add a new file locally. You can [push your change back to Bitbucket with SourceTree](https://confluence.atlassian.com/x/iqyBMg), or you can [add, commit,](https://confluence.atlassian.com/x/8QhODQ) and [push from the command line](https://confluence.atlassian.com/x/NQ0zDQ).
+## Licence
+See [LICENCE.txt](LICENCE.txt)
