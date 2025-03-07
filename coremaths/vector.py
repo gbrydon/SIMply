@@ -1,3 +1,5 @@
+# copyright (c) 2025, SIMply developers
+# this file is part of the SIMply package, see LICENCE.txt for licence.
 """Module containing classes for describing vectors, matrices and quaternions."""
 
 import math
