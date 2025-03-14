@@ -6,7 +6,7 @@ import radiometry.radiometry as rd
 from astropy.coordinates import SkyCoord
 from astroquery.vizier import Vizier
 from astropy import units
-from utils import constants as consts
+from simply_utils import constants as consts
 
 
 def getStarsInRegion(centrera: float, centredec: float, regionrad: float, maglim: float, degrees=True):

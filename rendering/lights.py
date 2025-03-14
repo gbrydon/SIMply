@@ -7,7 +7,7 @@ from coremaths.vector import Vec3
 from coremaths.ray import Ray
 from radiometry.radiometry import SpectralDensityCurve
 import numpy as np
-from utils import constants as consts
+from simply_utils import constants as consts
 from typing import Union
 
 _inp = Union[int, np.ndarray]

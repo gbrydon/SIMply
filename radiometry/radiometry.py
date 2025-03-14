@@ -3,7 +3,7 @@
 """Functions and classes for physically accurate radiometric modelling and calculations."""
 
 import os
-from utils import paths, constants as consts
+from simply_utils import paths, constants as consts
 from coremaths import geometry as gm
 from coremaths.vector import Vec3
 from radiometry.reflectance_funcs import BRDF

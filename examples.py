@@ -12,7 +12,7 @@ from rendering.renderer import Renderer
 from rendering.meshes import Mesh
 from rendering.textures import Texture
 from radiometry.reflectance_funcs import BRDF, TexturedBRDF as tBRDF
-from utils import paths, constants as consts
+from simply_utils import paths, constants as consts
 import matplotlib.pyplot as plt
 
 
