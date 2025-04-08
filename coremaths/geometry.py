@@ -168,6 +168,14 @@ class Plane(Geometry):
     def normal(self, point: 'Vec3') -> 'Vec3':
         return self.n
 
+    def perpDistTo(self, point: Vec3) -> _fnp:
+        """ Returns the shortest (i.e. perpendicular) distance from the given point to this plane.
+
+        :param point: the point.
+        :return: the point's perpendicular distance from the plane.
+        """
+        return (point - self.frame.origin).dot(self.n)
+
     def uv(self, point: Vec3) -> Optional[Tuple[_fnp, _fnp]]:
         warnings.warn("uv texture coordinate for an infinite plane does not exist.")
         return None
