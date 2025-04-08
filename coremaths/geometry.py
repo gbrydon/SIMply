@@ -145,6 +145,21 @@ class Plane(Geometry):
         """
         super().__init__(frame)
 
+    @classmethod
+    def parallelTo(cls, v1: Vec3, v2: Vec3, origin: Vec3):
+        """ Returns a plane which is parallel to both v1 and v2, with the given origin point lying on the plane.
+
+        The normal direction of the returned plane is given by the cross product of v1 with v2.
+
+        :param v1: vector parallel to the plane.
+        :param v2: another vector parallel to the plane.
+        :param origin: origin of the plane's coordinate frame. This point lies on the returned plane.
+        :return: the plane.
+        """
+        w = v1.cross(v2).norm
+        frame = Frame.withW(w, origin=origin)
+        return cls(frame)
+
     @property
     def n(self) -> 'Vec3':
         """The plane's normal"""
