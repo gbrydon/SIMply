@@ -1,3 +1,5 @@
+![SIMply logo](simply_logo_plum.png)
+
 # SIMply: Python Image Simulator for Planetary Exploration
 SIMply is an open-source python tool for simulating physically realistic images.
 SIMply is designed primarily to support the development of spaceborne cameras by providing a simple and accessible simulation tool for generating images of space scenes.
