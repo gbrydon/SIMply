@@ -12,7 +12,7 @@ from coremaths.ray import Ray
 from radiometry import radiometry as rd
 from scipy.ndimage.filters import gaussian_filter
 import warnings
-from typing import Optional, Tuple, Union
+from typing import Optional, Tuple, Union, Callable
 
 _fnp = Union[float, np.ndarray]
 
@@ -44,6 +44,7 @@ class Camera:
         self._qe = 0.5  # the camera's quantum efficiency, initialised as 0.5 by default (should be updated as needed)
         self._bitdepth = 8  # the camera's bits per pixel, initialised as 8 by default (should be updated as needed)
         self._fwc = 30000  # the camera's full well capacity [e-] (30,000 by default, should be updated as needed)
+        self._pixelResponse = lambda x: x  # pixel response function; takes perfect e- count and returns actual e- count
 
     @staticmethod
     def pinhole(fov: Tuple[float, float], dc: int, dr: int, dwx=None, dwy=None, degrees=True) -> 'Pinhole':
@@ -254,6 +255,28 @@ class Camera:
         """The gain of the camera in electrons per digital unit"""
         return self.fwc / 2 ** self.bitdepth
 
+    @property
+    def pixelResponseFunction(self) -> Callable[[_fnp], _fnp]:
+        """ Pixel response function of the camera. Takes as its argument the 'true' electron count the pixel should
+        read, and returns the pixel's actual electron count.
+
+        By default, this function just returns the true electron count (i.e. perfect response function).
+
+        :return: pixel response function
+        """
+        return self._pixelResponse
+
+    @pixelResponseFunction.setter
+    def pixelResponseFunction(self, func: Callable[[_fnp], _fnp]):
+        """ Updates the pixel response function of the camera to the given function.
+
+        The pixel response function takes as its argument the 'true' electron count the pixel should
+        read, and returns the pixel's actual electron count.
+
+        :param func: new pixel response function
+        """
+        self._pixelResponse = func
+
     def worldToImage(self, point: 'Vec3', cull=True) -> Tuple[Optional[_fnp], Optional[_fnp]]:
         """ Returns the camera's image coordinate that views a given world point
 
@@ -381,6 +404,7 @@ class Camera:
             eThermSignal = math2.binNumpyArray2D(eThermSignal, b)
         eReadNoise = np.round(rng.normal(0, self.nr, size=eSignal.shape))
         eCount = eSignal + eThermSignal + eReadNoise
+        eCount = self.pixelResponseFunction(eCount)
         eCount[eCount > self.fwc] = self.fwc
 
         return eCount
