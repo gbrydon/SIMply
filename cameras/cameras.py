@@ -3,6 +3,8 @@
 """Module containing classes for representing and working with cameras."""
 
 import math
+
+import astropy.convolution
 import cv2
 import numpy as np
 from coremaths import math2
@@ -11,6 +13,7 @@ from coremaths.vector import Vec2, Vec3, Mat3
 from coremaths.ray import Ray
 from radiometry import radiometry as rd
 from scipy.ndimage.filters import gaussian_filter
+import scipy
 import warnings
 from typing import Optional, Tuple, Union, Callable
 
@@ -35,7 +38,8 @@ class Camera:
         self._epd = 1e-3  # the camera's entrance pupil diameter [m], initialised as 1mm by default
         # (epd value should be updated as needed if using this camera for radiometric calculations)
         self._tr = 1  # the total optical transmission of the camera, initialised as 1 by default (update as needed)
-        self._psfSigma = 0  # sigma value for the camera's 2D gaussian PSF (0 by default, should be updated as needed)
+        self._psfSigma = 0  # sigma value for the camera's 2D PSF (0 by default, should be updated as needed)
+        self._psfType = 'gaussian'  # string indicator of camera's PSF type ('gaussian' and 'airy' supported by default)
         self._jd = 30  # the camera's dark current [e- s^-1], initialised as 30 by default (should be updated as needed)
         #  non-uniform dark current can be simulated by setting self.jd to a 2D numpy array with same size as detector
         self._nr = 15  # the camera's RMS read noise [e-], initialised as 15 by default (should be updated as needed)
@@ -168,13 +172,30 @@ class Camera:
 
     @property
     def psfSigma(self) -> float:
-        """The sigma value (standard deviation) [pixels] of the camera's 2D Gaussian PSF"""
+        """The sigma value (radius) [pixels] of the camera's PSF.
+
+        For gaussian PSF this is the radius of 1 standard deviation.
+        For Airy disk PSF, this is the radius of the first minimum.
+        """
         return self._psfSigma
 
     @psfSigma.setter
     def psfSigma(self, new: float):
-        """Sets a new value for the camera's 2D Gaussian PSF's standard deviation [pixels]"""
+        """Sets a new value for the camera's PSF size [pixels].
+
+        For gaussian PSF this is the radius of 1 standard deviation.
+        For Airy disk PSF, this is the radius of the first minimum."""
         self._psfSigma = new
+
+    @property
+    def psfType(self) -> str:
+        """ String identifier of the type of the camera's PSF (either 'gaussian' or 'airy')."""
+        return self._psfType
+
+    @psfType.setter
+    def psfType(self, new: str):
+        """Updates the camera's PSF type to the given string identifier (either 'gaussian' or 'airy')."""
+        self._psfType = new
 
     @property
     def tr(self) -> float:
@@ -334,12 +355,11 @@ class Camera:
         return dsi
 
     def applyPSF(self, image: np.ndarray) -> np.ndarray:
-        """ Applies the effect of a gaussian point spread function to the given image. The image should have the same
+        """ Applies the effect of the camera's point spread function to the given image. The image should have the same
         shape as this camera's detector, or its shape should be an integer multiple of this camera's detector's shape
         (for multiple samples per camera pixel).
 
-        The PSF is approximated as a 2D gaussian with sigma value equal to the camera's psfSigma property (update this
-        value first as required). The sigma value has units of camera detector pixels.
+        See camera's psfSigma and psfType properties to set size and type of the point spread function.
 
         :param image: the original image
         :return: the image with PSF applied
@@ -350,8 +370,14 @@ class Camera:
         assert self._psfSigma >= 0, "psf radius cannot be negative"
         sf, _ = self._getScaleFactorToDetector(image)
 
-        if self._psfSigma != 0:
+        if self._psfType == 'airy':
+            kernel = astropy.convolution.AiryDisk2DKernel(self._psfSigma * sf).array
+            image = scipy.signal.convolve2d(image, kernel, mode='same')
+        elif self._psfType == 'gaussian':
             image = gaussian_filter(image, sigma=self._psfSigma * sf)  # approximate effect of PSF as 2D gaussian
+        else:
+            w = "Cannot apply PSF to camera's image as camera has unrecognised PSF type of {}".format(self._psfType)
+            warnings.warn(w)
         return image
 
     def propagateFluxToDetector(self, flux: np.ndarray):
