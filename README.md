@@ -38,5 +38,7 @@ See the examples.py file for simple examples of how to set up and run image simu
 [![matplotlib](http://img.shields.io/badge/powered%20by-Matplotlib-blue.svg?style=flat)](https://matplotlib.org/)
 [![gdal](http://img.shields.io/badge/powered%20by-gdal-blue.svg?style=flat)](https://pypi.org/project/GDAL/)
 
+Logo Design: Divya M. Persaud
+
 ## Licence
 See [LICENCE.txt](LICENCE.txt)
