@@ -1,6 +1,6 @@
 # copyright (c) 2025, SIMply developers
 # this file is part of the SIMply package, see LICENCE.txt for licence.
-"""Module containing classes for defining renderbale objects for use in image simulation."""
+"""Module containing classes for defining renderable objects for use in image simulation."""
 
 import numpy as np
 import open3d
@@ -42,7 +42,7 @@ class RenderableObject:
             assert self._brdf.textureType is type(tex), message
 
     @staticmethod
-    def renderablePrimitive(geometry: Geometry, brdf: Union[BRDF, tBRDF, sBRDF] = None, tex: tx.Texture = None):
+    def renderablePrimitive(geometry: Geometry, brdf: Union[BRDF, tBRDF, sBRDF] = None, tex: tx.textureType = None):
         """ Returns a renderable object whose surface is described by the given geometric primitive.
 
         If physically-based radiometric rendering of this object is required, a BRDF or textured BRDF describing its
@@ -59,7 +59,7 @@ class RenderableObject:
         return RenderablePrimitive(geometry, brdf, tex)
 
     @staticmethod
-    def renderableMesh(mesh: Mesh, brdf: Union[BRDF, tBRDF, sBRDF] = None, tex: tx.Texture = None):
+    def renderableMesh(mesh: Mesh, brdf: Union[BRDF, tBRDF, sBRDF] = None, tex: tx.textureType = None):
         """ Returns a renderable object whose surface is described by the given surface mesh.
 
         If physically-based radiometric rendering of this object is required, a BRDF or textured BRDF describing its
@@ -81,7 +81,7 @@ class RenderableObject:
         return self._brdf is not None
 
     @property
-    def texture(self) -> Optional[tx.Texture]:
+    def texture(self) -> Optional[tx.textureType]:
         """The object's surface appearance texture, if any"""
         return self._texture
 
@@ -97,6 +97,12 @@ class RenderableObject:
         if self._brdf is not None and type(self._brdf) is sBRDF:
             return self._brdf.textureType
         return None
+
+    @property
+    def isPlanetocentricType(self):
+        """If the texture type of this object is planetocentric (meaning its texture(s) are single planetocentric
+        textures or compound planetocentric textures), this returns True."""
+        return self.textureType is tx.TexturePlanetocentric or self.textureType is tx.CompoundTexturePlanetocentric
 
     def intersect(self, ray: Ray, max_dist: float = 1e15) -> Dict[str, np.ndarray]:
         """ Calculates and returns the depth and position of the first positive intersection of the given ray with this
@@ -220,7 +226,7 @@ class RenderableObject:
 
 class RenderablePrimitive(RenderableObject):
     """ Class for renderable objects whose surfaces are described by simple geometric primitives"""
-    def __init__(self, geometry: Geometry, brdf: _brdf = None, tex: tx.Texture = None):
+    def __init__(self, geometry: Geometry, brdf: _brdf = None, tex: tx.textureType = None):
         """ Initialises a new renderable primitive object
 
         :param geometry: the geometric primitive defining its surface.
@@ -269,7 +275,7 @@ class RenderablePrimitive(RenderableObject):
             return None
         uv = intersection['primitive_uvs']
         uv = Vec2.fromNumpyArray(uv)
-        if self.textureType is tx.TexturePlanetocentric:
+        if self.isPlanetocentricType:
             # object's assigned texture is planetocentric
             pHit = self.geometry.pointFromUV(uv.x, uv.y)
             return pHit
@@ -281,7 +287,7 @@ class RenderablePrimitive(RenderableObject):
 class RenderableMesh(RenderableObject):
     """Class for a renderable objects whose surfaces are described by triangle meshes."""
 
-    def __init__(self, mesh: Mesh, brdf: Union[BRDF, tBRDF] = None, tex: tx.Texture = None):
+    def __init__(self, mesh: Mesh, brdf: Union[BRDF, tBRDF] = None, tex: tx.textureType = None):
         """ Initialises a new renderable object with the given surface mesh.
 
         If physically-based radiometric rendering of this object is required, a BRDF or textured BRDF describing its
@@ -349,7 +355,7 @@ class RenderableMesh(RenderableObject):
             u[texIsNan] = np.nan
             v[texIsNan] = np.nan
             return u, v
-        if self.textureType is tx.TexturePlanetocentric:
+        if self.isPlanetocentricType:
             # the renderable mesh has an associated planetocentric texture
             primID = intersection['primitive_ids']
             primUV = intersection['primitive_uvs']

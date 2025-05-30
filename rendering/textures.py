@@ -7,7 +7,7 @@ from coremaths.vector import Vec3
 from coremaths.frame import Frame
 import cv2
 import planetary_data as planData
-from typing import Callable, Optional, Tuple, Union
+from typing import Callable, List, Optional, Tuple, Union
 
 _fnp = Union[float, np.ndarray]
 _inp = Union[int, np.ndarray]
@@ -258,6 +258,19 @@ class TexturePlanetocentric(TexturePCS):
     v=1.
     """
 
+    @staticmethod
+    def compound(textures: List['TexturePlanetocentric']):
+        """ Returns a new compound planetocentric texture, comprising the given list of planetocentric textures.
+
+        If any of the textures making up this compound texture have overlapping extents, the order of the given textures
+        list is important. Textures earlier in the list will be prioritised over textures later in the list (i.e. if
+        two or more textures are overlapping, texture values at the overlapping regions will be taken from whichever of
+        those overlapping textures has the lowest index in the textures list).
+
+        :param textures: the textures making up this compound planetocentric texture.
+        """
+        return CompoundTexturePlanetocentric(textures)
+
     @classmethod
     def fromMetadataTextFile(cls, path: str):
         """Returns a Planetocentric texture initialised from a metadata text file at the given path"""
@@ -314,4 +327,54 @@ class TexturePlanetocentric(TexturePCS):
         return u, v
 
 
-textureType = Union[Texture, TexturePlanetocentric]
+class CompoundTexturePlanetocentric:
+    """Class for representing a texture which comprises multiple individual planetocentric textures each with its own
+    source image and extent.
+    """
+    def __init__(self, textures: List[TexturePlanetocentric]):
+        """ Initialises a new compound planetocentric texture, comprising the given list of planetocentric textures.
+
+        If any of the textures making up this compound texture have overlapping extents, the order of the given textures
+        list is important. Textures earlier in the list will be prioritised over textures later in the list (i.e. if
+        two or more textures are overlapping, texture values at the overlapping regions will be taken from whichever of
+        those overlapping textures has the lowest index in the textures list).
+
+        :param textures: the textures making up this compound planetocentric texture.
+        """
+        self._textures = textures
+
+    def valueFromXYZ(self, point: Vec3, raw=False, rgb_channel=2):
+        """ Returns the value of this compound texture at the given point (in world frame).
+
+        If raw argument is false, the returned value will be modified according to the corresponding texture's value
+        modifier function (if any). If raw argument is true, the unmodified value of the corresponding texture's source
+        image will be returned.
+
+        :param point: the point
+        :param raw: whether to return the raw value of the source image (otherwise value will be modified by texture's
+            value modifier function (if any))
+        :param rgb_channel: If the texture is an rgb texture (i.e. has 3 channels), rgb_channel dictates which channel
+            the texture value will be taken from. Set rgb_channel to 1, 2 or 3 to use the texture's red, green or blue
+            channel respectively. If the texture is not rgb (i.e. has a single channel), the value of rgb_channel is
+            ignored.
+        :return: the compound texture's value
+        """
+        u, v = self._textures[0].uvCoordFromXYZ(point)
+        ret = self._textures[0].valueFromUV(u, v, raw=raw, rgb_channel=rgb_channel)
+
+        def returnIfNoGapsInTextureValues():
+            if type(ret) is np.ndarray:
+                if np.all(~np.isnan(ret)):
+                    return ret
+            else:
+                if ret is not None:
+                    return ret
+        returnIfNoGapsInTextureValues()
+        for texture in self._textures[1:]:
+            u, v = texture.uvCoordFromXYZ(point)
+            ret[np.isnan(ret)] = texture.valueFromUV(u, v, raw=raw, rgb_channel=rgb_channel)[np.isnan(ret)]
+            returnIfNoGapsInTextureValues()
+        return ret
+
+
+textureType = Union[Texture, TexturePlanetocentric, CompoundTexturePlanetocentric]
