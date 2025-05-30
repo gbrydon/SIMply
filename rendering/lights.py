@@ -50,7 +50,7 @@ class Light:
         :param point: the point (in the same coordinate frame as this light's position) [m]
         :param w1: wavelength range's minimum [nm]
         :param w2: wavelength range's maximum [nm]
-        :return: the flux density [W m^-2 nm^-1]
+        :return: the flux density [W m^-2]
         """
         return 0
 
