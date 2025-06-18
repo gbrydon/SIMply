@@ -229,6 +229,24 @@ class Mesh:
                     v = 1 - float(line[2])
                     texCoords += [[u, v]]
 
+    @classmethod
+    def combining(cls, meshes: List['Mesh']):
+        """ Returns a single mesh object comprising all the individual given meshes.
+
+        :param meshes: the meshes to combine.
+        :return: the combined meshes as a single mesh.
+        """
+        vertices, tris = None, None
+        for mesh in meshes:
+            if vertices is None:
+                vertices = mesh.vertices
+                tris = mesh.tris
+            else:
+                indexOffset = vertices.shape[0]
+                vertices = np.append(vertices, mesh.vertices, axis=0)
+                tris = np.append(tris, mesh.tris + indexOffset, axis=0)
+        return Mesh(vertices, tris)
+
     @property
     def nVerts(self):
         """The total number of vertices (including nan vertices) in the mesh"""
