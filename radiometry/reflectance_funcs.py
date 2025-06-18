@@ -397,7 +397,7 @@ class TexturedBRDF:
                 self._isTextured = True
                 if self._textureType is not None:
                     message = "All textured parameters within a single textured BRDF must be of the same texture type."
-                    assert type(param) is self._textureType, message
+                    assert tx.textureIsCompatibleWithType(self._textureType, param), message
                 else:
                     self._textureType = type(param)
 
