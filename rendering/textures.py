@@ -377,4 +377,24 @@ class CompoundTexturePlanetocentric:
         return ret
 
 
+def textureIsCompatibleWithType(tex_type, texture: Union[Texture, TexturePlanetocentric]):
+    """ Checks whether the given texture is the same as, or compatible with, the given texture type (where compatible
+    with means that the given texture can be used alongside textures of the given texture type on the same renderable
+    object or textured BRDF).
+
+    :param tex_type: the texture type
+    :param texture: the texture which is being checked for compatibility
+    :return: whether the given texture is of the same type as, or compatible with, the given texture type
+    """
+    if tex_type is TexturePlanetocentric or tex_type is CompoundTexturePlanetocentric:
+        if type(texture) is TexturePlanetocentric or type(texture) is CompoundTexturePlanetocentric:
+            return True
+        else:
+            return False
+    else:
+        if tex_type is not type(texture):
+            return False
+    return True
+
+
 textureType = Union[Texture, TexturePlanetocentric, CompoundTexturePlanetocentric]
