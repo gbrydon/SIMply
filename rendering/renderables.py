@@ -39,7 +39,7 @@ class RenderableObject:
                        "renderable object must be of the same texture type. If the renderable's texture must be of a "
                        "different texture type to textured brdf parameters, use two different renderable objects - one "
                        "with the textured brdf, and the other with the texture.")
-            assert self._brdf.textureType is type(tex), message
+            assert tx.textureIsCompatibleWithType(self._brdf.textureType, tex), message
 
     @staticmethod
     def renderablePrimitive(geometry: Geometry, brdf: Union[BRDF, tBRDF, sBRDF] = None, tex: tx.textureType = None):
