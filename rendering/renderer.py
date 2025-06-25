@@ -80,7 +80,7 @@ class Renderer:
             view['to_light'] = ls
             view['shadow'] = shadow
 
-            return intersection, view
+        return intersection, view
 
     @staticmethod
     def depth(scene: _Renderable, camera: _Cam, lim: _Lims = None):
