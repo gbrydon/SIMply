@@ -400,6 +400,8 @@ class PlanetDTM:
         latmax = metadata.maxlat
         longwest = metadata.westlong % 360
         longeast = metadata.eastlong % 360
+        vmin = metadata.vmin
+        vmax = metadata.vmax
 
         if sub_region is not None:
             sub_region = [sub_region[0] % 360, sub_region[1] % 360, sub_region[2], sub_region[3]]
@@ -425,6 +427,10 @@ class PlanetDTM:
             e = self.elevationData[idx_latMax:idx_latMin + 1, idx_longMin:idx_longMax + 1]
         else:
             e = self.elevationData
+        if np.issubdtype(e.dtype, np.integer):
+            e = e.astype(float)
+        e[e < vmin] = np.nan
+        e[e > vmax] = np.nan
 
         if dsf != 1:
             long = long[::dsf]
@@ -443,7 +449,7 @@ class PlanetDTM:
             np.save(save_path, arr)
         return points
 
-    def getTrimesh(self, sub_region=None, dsf=1, save_path: str = None):
+    def getTrimesh(self, sub_region=None, dsf=1, save_path: str = None, retain_grid_info=False):
         """ Generates a trimesh from the given DTM and returns it. If a save_path is provided, the trimesh is
             also saved as a pair of numpy arrays (a vertices array and a tris array) at the given path.
 
@@ -453,11 +459,14 @@ class PlanetDTM:
         :param dsf: down-sampling factor - integer factor by which the DTM will be downsampled before trimesh is
                     generated (dsf=1 performs no down-sampling)
         :param save_path: optional path for resulting trimesh to be saved as a numpy arrays (exclude file extension)
+        :param retain_grid_info: whether to retain the information describing the connection between the mesh's
+            vertices and the grid of points (dtm) from which they're extracted.
         :return: the trimesh
         """
         grid = self.getPointGrid(sub_region=sub_region, dsf=dsf)
         mesh = meshes.Mesh.fromPointGrid(grid.x, grid.y, grid.z)
-        mesh = mesh.meshStrippedOfNans
+        if retain_grid_info is False:
+            mesh = mesh.meshStrippedOfNans
         if save_path is not None:
             np.save(save_path + '_verts.npy', mesh.vertices)
             np.save(save_path + '_tris.npy', mesh.tris)
