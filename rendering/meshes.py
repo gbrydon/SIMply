@@ -305,21 +305,33 @@ class Mesh:
     @property
     def meshStrippedOfNans(self) -> 'Mesh':
         """ Returns a new mesh which represents the same surface as this mesh, but all vertices with nan values have
-        been removed. This makes no difference to the shape or appearance of a mesh, but reduces data size and can
-        mitigate compatibility issues when viewing this mesh with other software. NOTE however that stripping a
-        grid-like mesh of nans will remove its grid-like connectivity, and the mesh can no longer be treated as
-        grid-like (will cause texture mapping issues if the mesh is linked to a grid-like texture)
+        been removed. Any triangles comprising nan vertices are also removed.
+        This makes no difference to the physical shape or appearance of a mesh, but reduces data size and can
+        mitigate compatibility issues when viewing this mesh with other software.
+
+        NOTE that stripping a grid-like mesh of nans will remove its grid-like connectivity, and the mesh can no longer
+        be treated as grid-like (will cause texture mapping issues if the mesh is linked to a grid-like texture).
 
         :return: The nan-free mesh
         """
-        nanVerts = np.any(np.isnan(self.vertices), axis=1)
-        if not np.any(nanVerts):
-            return self
-        self._gridShape = None
-        vertIndexAdjustments = np.cumsum(nanVerts)
-        strippedTris = self._tris - vertIndexAdjustments[self._tris]
-        strippedVerts = self._vertices[~nanVerts]
-        return Mesh(strippedVerts, strippedTris, shift=self._renderingShift)
+        nantris = np.any(np.any(np.isnan(self._vertices[self._tris]), axis=2), axis=1)
+        strippedTris = self._tris[~nantris]
+
+        strippedTriTexIndices = None
+        if self._triTexIndices is not None:
+            strippedTriTexIndices = self._triTexIndices[~nantris]
+
+        strippedVerts = self._vertices
+        nanVerts = np.any(np.isnan(self._vertices), axis=1)
+        if np.any(nanVerts):
+            vertIndexAdjustments = np.cumsum(nanVerts)
+            strippedTris = strippedTris - vertIndexAdjustments[strippedTris]
+            strippedVerts = self._vertices[~nanVerts]
+
+        strippedMesh = Mesh(strippedVerts, strippedTris, shift=self._renderingShift)
+        strippedMesh.textureCoordArray = self._textureCoordArray
+        strippedMesh.triTexIndices = strippedTriTexIndices
+        return strippedMesh
 
     @property
     def isGridMesh(self) -> bool:
@@ -528,15 +540,16 @@ class Mesh:
         ret.z[~notNan] = np.nan
         return ret
 
-    def saveOBJ(self, outpath: str, sf=1):
+    def saveOBJ(self, outpath: str, sf=1, header=None):
         """ Generates an .obj (wavefront) file for this mesh and saves it to the given path
 
         :param outpath: path to save the .obj file.
         :param sf: scale factor by which to multiply the values of the vertices' coordinates before saving in the .obj
-        :param vtc: optional tuple of u and v texture coordinates for each of the vertices in the mesh
-        :param mtl: name of mtl file (if any) that describes associated texture
+        :param header: a string which will be placed at the beginning of the .obj file (e.g. comments or an mtl ref)
         """
         f = open(outpath, 'w')
+        if header is not None:
+            f.write(header + '\n')
         for vertex in self._vertices:
             f.write('v {0} {1} {2}\n'.format(vertex[0] * sf, vertex[1] * sf, vertex[2] * sf))
         if self.hasVertexTextureMapping:
@@ -677,3 +690,26 @@ class Mesh:
         """
         newVertices = scale * rotation * self.verticesVec3 + translation
         return Mesh.fromVec3(newVertices, self._tris)
+
+    def assignTextureCoordsToVertices(self, tc: np.ndarray):
+        """ Assigns the given u,v texture coordinates to the mesh's vertices. The given texture coordinate array tc
+        must be a numpy array of shape (n, 2) where n is the number of vertices in this mesh. tc should contain the u
+        and v texture coordinates of each vertex, in the same order as the vertices are stored in the mesh's vertices
+        array.
+
+        :param tc: nx2 numpy array containing u,v texture coordinates for each of the mesh's n vertices.
+        """
+        self._textureCoordArray = tc
+        self._triTexIndices = self._tris
+
+    def setTextureCoordsToGridUV(self):
+        """ Set the texture coordinates of this grid-like mesh's vertices to be equal to their respective grid UV
+        coordinates. NOTE: this function will only work if used on a mesh with grid-like connectivity.
+        """
+        if self.isGridMesh:
+            vertIndex = np.arange(self.nVerts)
+            u, v = self.vertexGridUVFromFlatID(vertIndex)
+            arr = np.empty(u.shape + (2,))
+            arr[:, 0] = u
+            arr[:, 1] = v
+            self.assignTextureCoordsToVertices(arr)
