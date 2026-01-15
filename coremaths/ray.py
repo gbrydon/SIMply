@@ -92,7 +92,7 @@ class Ray:
         :param y: the desired y value
         :return: the point on the ray
         """
-        depth = y - self.origin.y / self.d.y
+        depth = (y - self.origin.y) / self.d.y
         return self.point(depth)
 
     def pointWithZ(self, z: 'FloatOrNp') -> 'Vec3':
@@ -103,7 +103,7 @@ class Ray:
         :param z: the desired z value
         :return: the point on the ray
         """
-        depth = z - self.origin.z / self.d.z
+        depth = (z - self.origin.z) / self.d.z
         return self.point(depth)
 
     def transformed(self, old: 'Frame' = Frame.world(), new: 'Frame' = Frame.world()) -> 'Ray':
