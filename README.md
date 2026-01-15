@@ -25,7 +25,9 @@ In both cases, it is also necessary to ensure the following dependencies are ins
 - [gdal](https://pypi.org/project/GDAL/) (optional, for working with geotifs)
 
 ## Software Paper
-SIMply has an accompanying peer-reviewed journal [paper](https://doi.org/10.34133/space.0319) describing its capabilities, showcasing example simulations, and providing validation/verification of SIMply's physical accuracy. The paper, published in the journal Space: Science & Technology, is accessible [here](https://doi.org/10.34133/space.0319). 
+SIMply has an accompanying peer-reviewed journal [paper](https://doi.org/10.34133/space.0319) describing its capabilities, showcasing example simulations, and providing validation/verification of SIMply's physical accuracy. The paper, published in the journal Space: Science & Technology, is accessible [here](https://doi.org/10.34133/space.0319).
+
+If citing this software, please use the above paper.
 
 SIMply is supporting a number of research [projects](https://spaceborneplanetaryimaging.com/).
 
@@ -42,6 +44,8 @@ See the [examples.py]('examples/examples.py) file for simple examples of how to 
 
 ## Contact
 Want to work together? Require support integrating SIMply's capabilities into a project? Get in touch [here](https://spaceborneplanetaryimaging.com/contact/) for collaboration and consulting enquiries.
+
+Currently, pull requests will be considered for minor changes/bug fixes only.
 
 ## Acknowledgements
 
