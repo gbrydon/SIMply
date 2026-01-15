@@ -81,7 +81,7 @@ class Ray:
         :param x: the desired x value
         :return: the point on the ray
         """
-        depth = x - self.origin.x / self.d.x
+        depth = (x - self.origin.x) / self.d.x
         return self.point(depth)
 
     def pointWithY(self, y: 'FloatOrNp') -> 'Vec3':

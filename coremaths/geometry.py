@@ -501,7 +501,7 @@ class Cuboid(Polyhedron):
                 retZ[cond] = da[cond] * aAxs[j].z + db[cond] * bAxs[j].z + faceCentres[j].z
             plocal = Vec3((retX, retY, retZ))
         else:
-            plocal = (a - a0s[i]) * aAxs[i] + (b - b0s[i]) * bAxs[i]
+            plocal = (a - a0s[i]) * aAxs[i] + (b - b0s[i]) * bAxs[i] + faceCentres[i]
         return self.frame.toWorld(plocal)
 
     def intersect(self, ray: 'Ray', epsilon=1e-7, max_dist: float = 1e15, shift: Vec3 = None) -> Dict[str, np.ndarray]:
@@ -537,13 +537,13 @@ class Cuboid(Polyhedron):
             ret['primitive_normals'] = n.asNumpyArray
             ret['primitive_uvs'] = Vec2(self.uv(point)).asNumpyArray
         else:
-            if raylocal.x == 0:
-                raylocal.x = epsilon
-            if raylocal.y == 0:
-                raylocal.y = epsilon
-            if raylocal.z == 0:
-                raylocal.z = epsilon
-            dinv = Vec3((1 / ray.d.x, 1 / ray.d.y, 1 / ray.d.z))
+            if raylocal.d.x == 0:
+                raylocal.d.x = epsilon
+            if raylocal.d.y == 0:
+                raylocal.d.y = epsilon
+            if raylocal.d.z == 0:
+                raylocal.d.z = epsilon
+            dinv = Vec3((1 / raylocal.d.x, 1 / raylocal.d.y, 1 / raylocal.d.z))
             tx1 = ((-0.5 * self.lx) - raylocal.origin.x) * dinv.x
             tx2 = ((0.5 * self.lx) - raylocal.origin.x) * dinv.x
             tmin = min(tx1, tx2)
@@ -565,8 +565,6 @@ class Cuboid(Polyhedron):
                 point = ray.point(tmin)
                 ret['primitive_normals'] = self.normal(point).asNumpyArray
                 ret['primitive_uvs'] = Vec2(self.uv(point)).asNumpyArray
-            ret = {}
-
         if shift is not None:
             self.frame = self.frame.translated(-shift)
 
