@@ -70,6 +70,10 @@ def test_Vec3GetPerpendicularVector():
     v2 = Vec3((rand(n), rand(n), rand(n))).norm
     v2 = v2.projectedPerpTo(v1)
     assert np.allclose(v1.angleWith(v2), 0.5 * math.pi)
+    v1 = Vec3((v1.x[0], v1.y[0], v1.z[0]))
+    v2 = Vec3((v2.x[0], v2.y[0], v2.z[0]))
+    v2 = v2.projectedPerpTo(v1)
+    assert math.isclose(v1.angleWith(v2), 0.5 * math.pi)
 
 
 def test_Vec3GetParallelVector():
@@ -78,6 +82,10 @@ def test_Vec3GetParallelVector():
     v2 = Vec3((rand(n), rand(n), rand(n))).norm
     v2 = v2.projectedOnto(v1)
     assert np.all(v1.isParallelWith(v2) + v1.isAntiparallelWith(v2))
+    v1 = Vec3((v1.x[0], v1.y[0], v1.z[0]))
+    v2 = Vec3((v2.x[0], v2.y[0], v2.z[0]))
+    v2 = v2.projectedOnto(v1)
+    assert v1.isParallelWith(v2) or v1.isAntiparallelWith(v2)
 
 
 def test_Vec3Rotate():
@@ -123,6 +131,15 @@ def test_Vec3AnticlockwiseAngles():
     checkAng, _ = v.anticlockAngleWith(vrot, ax)
     checkAng = checkAng % (2 * math.pi)
     assert np.allclose(ang, checkAng)
+    v = Vec3((v.x[0], v.y[0], v.z[0]))
+    ax = Vec3((ax.x[0], ax.y[0], ax.z[0]))
+    ax = ax.projectedPerpTo(v).norm
+    ang = ang[0]
+    vrot = v.rotated(ax, ang)
+    checkAng, _ = v.anticlockAngleWith(vrot, ax)
+    checkAng = checkAng % (2 * math.pi)
+    assert math.isclose(ang, checkAng)
+
     v1 = Vec3((rand(n), rand(n), rand(n))).norm
     v2 = Vec3((rand(n), rand(n), rand(n))).norm
     ang, ax = v1.anticlockAngleWith(v2)
