@@ -1,3 +1,5 @@
+# copyright (c) 2026, SIMply developers
+# this file is part of the SIMply package, see LICENCE.txt for licence.
 import math
 import numpy as np
 from coremaths.vector import Vec3, Mat3
