@@ -211,7 +211,6 @@ class Plane(Geometry):
                     return {}
                 ret['t_hit'] = np.array(depth)
                 ret['primitive_normals'] = np.array((self.n.x, self.n.y, self.n.z))
-            ret = {}
         if shift is not None:
             self.frame = self.frame.translated(-shift)
         return ret
