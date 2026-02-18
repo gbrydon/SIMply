@@ -6,7 +6,7 @@ import numpy as np
 from coremaths.vector import Vec3
 from coremaths.frame import Frame
 import cv2
-import planetary_data as planData
+import planetary_data.planetary_data as planData
 from typing import Callable, List, Optional, Tuple, Union
 
 _fnp = Union[float, np.ndarray]
