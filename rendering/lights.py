@@ -68,7 +68,7 @@ class Light:
         point (in world coords) to a random point on the visible surface of the light (from the origin's perspective).
 
         If this function is called on a light with an infinitesimal
-        source (e.g. a point light) the returned ray point's to the light's centre.
+        source (e.g. a point light) the returned ray points to the light's centre.
 
         :param origin: Ray's origin (in world coordinates)
         :return: Ray pointing towards a random point on this light's emitting surface
