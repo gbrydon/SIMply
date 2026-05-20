@@ -172,7 +172,7 @@ class LightPointSource(Light):
         try:
             return self.power.integrated(w1, w2) / (4 * np.pi * r ** 2)
         except AttributeError:
-            return self.power / (4 * np.pi * r ** 2)
+            return (w2 - w1) * self.power / (4 * np.pi * r ** 2)
 
     def traceRayRandom(self, origin: Vec3) -> Ray:
         principal = super().traceRayToCentre(origin)
