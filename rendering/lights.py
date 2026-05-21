@@ -5,7 +5,9 @@
 from coremaths import math2
 from coremaths.vector import Vec3
 from coremaths.ray import Ray
+from coremaths.frame import Frame
 from radiometry.radiometry import SpectralDensityCurve
+from cameras.cameras import Camera
 import numpy as np
 from simply_utils import constants as consts
 from typing import Union
@@ -41,7 +43,17 @@ class Light:
         return LightPointSource.sun(pos)
 
     def __init__(self, pos: Vec3):
-        self.pos = pos
+        self._pos = pos
+
+    @property
+    def pos(self) -> Vec3:
+        """The light's position"""
+        return self._pos
+
+    @pos.setter
+    def pos(self, new: Vec3):
+        """Updates the light's position"""
+        self._pos = new
 
     def fluxDensity(self, point: Vec3, w1: float, w2: float) -> float:
         """ Returns the total flux density [W m^-2] from this light source at the given point over the given wavelength
@@ -195,3 +207,104 @@ class LightPointSource(Light):
         offset = perp.rotated(principal.d, theta) * r * self._radius
         d = ((self.pos + offset) - origin).norm
         return Ray(origin, d)
+
+
+class DirectionalLight(Light):
+    """Base class representing a directional light source.
+
+    Don't use this base class, only use subclasses."""
+
+    def __init__(self, frame: Frame):
+        super().__init__(frame.origin)
+        self._frame = frame
+
+    @property
+    def pos(self):
+        return self._frame.origin
+
+    @pos.setter
+    def pos(self, new):
+        self._frame.origin = new
+
+    @property
+    def frame(self) -> Frame:
+        """The coordinate frame defining the light's position and orientation"""
+        return self._frame
+
+    @frame.setter
+    def frame(self, new: Frame):
+        """Updates the light's frame"""
+        self._frame = new
+
+
+class Projector(DirectionalLight):
+    """A light source that projects an image."""
+
+    def __init__(self, projector: Camera, projected_power: np.ndarray,
+                 spectral_profile: SpectralDensityCurve = None):
+        """ Initialises a new projector light source.
+
+        :param projector: camera whose projection defines the light's projection of its image onto the scene
+        :param projected_power: 2D numpy array representing the image that the light projects, where each pixel's value
+                is the total spectral power [W nm^-1] projected into that pixel's IFOV.
+        :param spectral_profile: optional spectral profile defining the relative variation of the projector's power
+                output with respect to wavelength (treated as uniform over whole of the projector's image). If none
+                is provided, power output does not vary with wavelength.
+        """
+        assertionMessage = "projected power image must have same shape as projector camera's detector"
+        assert projector.dc == projected_power.shape[1], assertionMessage
+        assert projector.dr == projected_power.shape[0], assertionMessage
+        assert projected_power.ndim == 2, "projected power image must be 2 dimensional"
+
+        super().__init__(projector.frame)
+
+        self._projector = projector
+
+        ifov = projector.calculateIFOV()
+        pixelSolidAngle = ifov[0] * ifov[1]
+        self._projectedImageIntensity = projected_power / pixelSolidAngle  # W sr^-1 nm^-1
+
+        self._spectralProfile = spectral_profile
+
+    @property
+    def pos(self):
+        return self._projector.pos
+
+    @pos.setter
+    def pos(self, new):
+        self._projector.pos = new
+
+    @property
+    def frame(self) -> Frame:
+        return self._projector.frame
+
+    @frame.setter
+    def frame(self, new: Frame):
+        self._projector.frame = new
+
+    @property
+    def projectedImageIntensity(self):
+        """ The projector's image, in units of spectral intensity [W sr-1 nm^-1] of each projected pixel."""
+        return self._projectedImageIntensity
+
+    @property
+    def projector(self) -> Camera:
+        """The camera defining the light's projection"""
+        return self._projector
+
+    def fluxDensity(self, point: Vec3, w1: float, w2: float) -> float:
+        imgCoord = self._projector.worldToImage(point, cull=True)
+        if imgCoord is None:
+            return 0
+        if type(imgCoord[0]) == np.ndarray:
+            intensity = np.zeros_like(imgCoord[0])
+            lit = ~np.isnan(imgCoord[0]) * ~np.isnan(imgCoord[1])
+            intensity[lit] = self._projectedImageIntensity[imgCoord[1][lit].astype(int), imgCoord[0][lit].astype(int)]
+        else:
+            intensity = self._projectedImageIntensity[int(imgCoord[1]), int(imgCoord[0])]
+
+        r = (point - self.pos).length
+        if self._spectralProfile is None:
+            return (w2 - w1) * intensity / r ** 2
+        else:
+            return self._spectralProfile.integrated(w1, w2) * intensity / r ** 2
