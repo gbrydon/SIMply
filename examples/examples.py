@@ -7,7 +7,7 @@ from coremaths.vector import Vec3
 from coremaths.frame import Frame
 from coremaths.geometry import Rectangle, Spheroid
 from rendering.renderables import RenderableObject, RenderableScene
-from rendering.lights import Light
+from rendering.lights import Light, Projector
 from rendering.renderer import Renderer
 from rendering.meshes import Mesh
 from rendering.textures import Texture
@@ -195,6 +195,63 @@ def renderMesh2(display=True):
     return img
 
 
+def renderProjectedLight(display=True):
+    """ This example loads a mesh from an .obj file and renders an image of it illuminated by a projector light source.
+    Projector light sources project a 2D image onto the scene.
+
+    Things demonstrated in this example:
+        - loading a mesh from an .obj
+        - defining a renderable object from a mesh and a brdf
+        - defining and positioning a projector light source
+        - defining a renderable scene with a renderable object and a projector light
+        - defining a pinhole camera; adjusting the camera's pose; adjusting camera parameters
+        - rendering a digital image
+
+    :param display: whether to display the rendered images
+    :return: the rendered digital image
+    """
+
+    # load a triangle mesh from an .obj (wavefront) file:
+    meshPath = paths.dataFilePath(['input', 'examples', 'model1'], 'surface.obj')
+    mesh = Mesh.loadFromOBJ(meshPath)
+
+    # define a BRDF:
+    brdf = BRDF.lambert(0.3)
+
+    # initialise the renderable object:
+    renderable = RenderableObject.renderableMesh(mesh, brdf)
+
+    # set up a projector light source:
+    # define the projector's projection (defined by a camera)
+    projection = Camera.pinhole((10, 10), 500, 500)
+    # define the image that the light projects (black and white stripes, such as might be used for structured
+    # light 3D reconstruction):
+    sqWave = (255 * np.ceil(np.sin(np.linspace(0, np.pi * 100, projection.dc)))).astype(int)
+    projImg = np.repeat(sqWave[None, :], projection.dr, axis=0) * 1e-3
+    # initialise projector:
+    projector = Projector(projection, projImg)
+    # position the light:
+    projector.frame = Frame.withW(Vec3((-1, -1, -1)).norm, origin=1e3 * Vec3((1, 1, 1)))
+
+    # set up the scene:
+    scene = RenderableScene([renderable], projector)
+
+    # set up the camera
+    cam = Camera.pinhole((40, 40), 500, 500)
+    # update the camera's frame to position the camera at [0, 400, 0] with principal axis along the -y direction
+    cam.frame = Frame.withW(Vec3((0, -1, 0)), origin=Vec3((0, 400, 0)))
+
+    # render a digital image of the scene captured with exposure time 0.05s, waveband 500-502nm:
+    img, _ = Renderer.image(scene, cam, 0.1, [500, 501, 502], sf=1, n_shad=1)
+
+    if display:
+        plt.imshow(img, cmap='gray')
+        plt.show()
+
+    return img
+
+
 # renderSpheroid()
 # renderMesh1()
 # renderMesh2()
+# renderProjectedLight()
