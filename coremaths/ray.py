@@ -7,7 +7,7 @@ origin in 3D space).
 import numpy as np
 from coremaths.vector import Vec3
 from coremaths.frame import Frame
-from typing import Union
+from typing import Optional, Tuple, Union
 
 FloatOrNp = Union[float, np.ndarray]
 
@@ -63,6 +63,11 @@ class Ray:
         except TypeError:
             return self._d.numpyShape
 
+    @property
+    def reversed(self):
+        """Returns this ray with an opposite direction (origin remains unchanged)"""
+        return Ray(self._origin, -self._d)
+
     def point(self, depth: 'FloatOrNp') -> 'Vec3':
         """ Returns the point on this ray with given distance from the ray's origin.
 
@@ -116,6 +121,26 @@ class Ray:
         p1 = old.toFrame(self.origin, new)
         p2 = old.toFrame(self.point(1), new)
         return Ray(p1, p2 - p1)
+
+    def pointsAtGivenDistanceFromArbitrary(self, point: Vec3, distance: FloatOrNp) -> Optional[Tuple[Vec3, Vec3]]:
+        """ Returns the two points on this ray that have the given distance from the given arbitrary reference point
+        (if any such points exist).
+
+
+        :param point: reference point (need not be on the ray)
+        :param distance: the desired distance from the given point to the point on this ray
+        :return: tuple containing the points on the ray satisfying the desired distance requirement
+        """
+        perp = (self._origin - point).projectedPerpTo(self._d)
+        perpDist = perp.length
+        if type(perpDist) is not np.ndarray and type(distance) is not np.ndarray:
+            if perpDist > distance:
+                return None
+
+        t = np.sqrt(distance ** 2 - perpDist ** 2)
+        closestApproach = point + perp
+
+        return closestApproach + self._d * t, closestApproach + self._d * -t
 
     def numpyMasked(self, mask: np.ndarray) -> 'Ray':
         """ Returns the numpy-masked version of this ray (where all numpy components of its vectors are masked by the
