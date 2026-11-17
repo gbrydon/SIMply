@@ -540,7 +540,7 @@ class Vec3:
         :param axis: the axis around which the angle is measured (must be normalised and perpendicular to both vectors).
                     If None is provided, the normalised cross product of this vector with the other is used.
         :return: the anticlockwise angle from this vector to the other [radians], and the vector around which this angle
-                is measured (provided as an [angle, vector tuple])
+                is measured (provided as an [angle, vector] tuple)
         """
         if axis is None:
             axis = self.cross(other).norm
