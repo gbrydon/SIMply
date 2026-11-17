@@ -11,7 +11,7 @@ from rendering.lights import Light, Projector
 from rendering.renderer import Renderer
 from rendering.meshes import Mesh
 from rendering.textures import Texture
-from radiometry.reflectance_funcs import BRDF, TexturedBRDF as tBRDF
+from radiometry.reflectance_funcs import BRDF, TexturedBRDF as tBRDF, SpectralBRDF as sBRDF
 from simply_utils import paths, constants as consts
 import matplotlib.pyplot as plt
 
@@ -195,6 +195,72 @@ def renderMesh2(display=True):
     return img
 
 
+def renderSpectralImage(display=True):
+    """This example demonstrates how to use spectral BRDFs to render multichannel spectral images (in this case an RGB
+    image of a shiny blue spheroid in front of a matte red wall).
+
+        Steps demonstrated in this example:
+            - defining a renderable object from a geometric primitive and spectral BRDF
+            - defining a renderable scene with renderable objects and a light
+            - defining a pinhole camera; adjusting the camera's pose; adjusting camera parameters
+            - performing a multispectral rendering, and constructing an RGB image from the result
+
+        :param display: whether to display the rendered image
+        """
+    # define spheroid surface
+    surface = Spheroid(Frame.world(), 1.2, 1.5, 1)
+    # define spheroid's reflection properties using Phong BRDFs
+    brdfRed = BRDF.phong(0.0, 0.00, 1)
+    brdfGreen = BRDF.phong(0.01, 0.004, 5)
+    brdfBlue = BRDF.phong(0.01, 0.006, 1)
+    # a spectral brdf is defined by providing a dictionary of brdfs for individual wavelengths:
+    brdf = sBRDF({700: brdfRed, 500: brdfGreen, 460: brdfBlue})
+    # initialise the renderable object using the spectral brdf
+    spheroid = RenderableObject.renderablePrimitive(surface, brdf)
+
+    # define rectangle surface
+    surface = Rectangle(Frame.withW(Vec3((1, 0, 0)), origin=Vec3((-10, 0, 0))), 100, 100)
+    # define rectangle's reflection properties using lambertian BRDFs
+    brdfRed = BRDF.lambert(0.01)
+    brdfGreen = BRDF.lambert(0.004)
+    brdfBlue = BRDF.lambert(0.001)
+    # a spectral brdf is defined by providing a dictionary of brdfs for individual wavelengths:
+    brdf = sBRDF({700: brdfRed, 500: brdfGreen, 460: brdfBlue})
+    # initialise the renderable object
+    rectangle = RenderableObject.renderablePrimitive(surface, brdf)
+
+    # set up scene's light source
+    au = 1.5e11
+    light = Light.sunPointSource(au * Vec3((2, -1, 0)).norm)
+
+    # initialise scene
+    scene = RenderableScene([spheroid, rectangle], light)
+
+    # set up camera
+    camera = Camera.pinhole((30, 30), 500, 500)
+    # update camera's frame. This positions the camera at [20, 0, 0] and points it along the -x direction,
+    # with its horizontal image axis aligned with the y-axis of the world frame
+    camera.frame = Frame.withW(Vec3((-1, 0, 0)), origin=Vec3((20, 0, 0)), u=Vec3((0, 1, 0)))
+    camera.epd = 2e-3
+    camera.psfSigma = 0.6
+    camera.nr = 40
+
+    # render the images (one for each waveband)
+    ims = Renderer.imageMS(scene, camera, 0.03, [(690, 700, 710), (490, 500, 510), (450, 460, 470)], sf=2, n_shad=2)
+
+    # construct a 3-channel RGB image from the individual rendered images:
+    rgbImg = np.empty(ims[0][0].shape + (3,), dtype=np.uint8)
+    rgbImg[..., 0] = ims[0][0]
+    rgbImg[..., 1] = ims[0][1]
+    rgbImg[..., 2] = ims[0][2]
+
+    if display:
+        plt.imshow(rgbImg, cmap='gray')
+        plt.show()
+
+    return rgbImg
+
+
 def renderProjectedLight(display=True):
     """ This example loads a mesh from an .obj file and renders an image of it illuminated by a projector light source.
     Projector light sources project a 2D image onto the scene.
@@ -254,4 +320,5 @@ def renderProjectedLight(display=True):
 # renderSpheroid()
 # renderMesh1()
 # renderMesh2()
+# renderSpectralImage()
 # renderProjectedLight()
