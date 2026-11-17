@@ -597,14 +597,17 @@ class CameraTwoWay(Camera):
         camera.pos = home
         return col, row
 
-    def drawFOV(self, camera: 'Camera', sf=1) -> np.ndarray:
-        """ Returns an image of the given camera's detector with this camera's FOV drawn onto it.
+    def drawFOV(self, camera: 'Camera', sf=1, thickness=20) -> np.ndarray:
+        """ Returns an image of the given camera's detector with this camera's FOV drawn onto it (assuming both
+        cameras are at the same position).
 
-        :param camera: Camera whose detector the FOV will be drawn on to.
+        :param camera: camera on to whose detector the FOV will be drawn.
         :param sf: sampling factor controlling the number of pixels in the returned image relative to the number of
             pixels in the given camera's detector. If the given camera's detector has c columns and r rows of pixels,
             the image returned by this function will have sf x c columns and sf x r rows. Can be used to increase
             sampling rate to improve image fidelity. sf=1 by default.
+        :param thickness: the thickness of the drawn FOV outline (the outline's outer edge always coincides with
+            the FOV edge) [pixels].
         :return: FOV image.
         """
         home = camera.pos
@@ -614,10 +617,11 @@ class CameraTwoWay(Camera):
         colout = np.linspace(0, self.dc - 1, self.dc * sf)
         rowout = np.linspace(0, self.dr - 1, self.dr * sf)
         colout, rowout = np.meshgrid(colout, rowout)
-        condition = (colout < 50) + (colout > self.dc - 50) + (rowout < 50) + (rowout > self.dr - 50)
+        condition = (colout < thickness) + (colout > self.dc - thickness) + (rowout < thickness) + (rowout > self.dr - thickness)
         colin, rowin = camera.worldToImage(p.npMask(condition))
+        isNan = np.isnan(colin) + np.isnan(rowin)
         camera.pos = home
-        img[rowin.astype(int), colin.astype(int)] = 1
+        img[rowin[~isNan].astype(int), colin[~isNan].astype(int)] = 1
         return img
 
 
