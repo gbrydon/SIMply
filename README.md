@@ -43,7 +43,7 @@ See the [examples.py]('examples/examples.py) file for simple examples of how to 
 ![RPO vid](examples/example_outputs/RPO.gif)
 
 ## Contact
-Want to work together? Require support integrating SIMply's capabilities into a project? Get in touch [here](https://spaceborneplanetaryimaging.com/contact/) for collaboration and consulting enquiries.
+Want to work together? Require support integrating SIMply's capabilities into a project? Have other enquiries? Contact the developer [here](mailto:george.brydon@glasgow.ac.uk).
 
 Currently, pull requests will be considered for minor changes/bug fixes only.
 
